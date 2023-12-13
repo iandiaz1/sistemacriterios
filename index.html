@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Criterios</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="criterios-main">
+      <div class="criterios-container">
+        <h1>Criterios</h1>
+
+        <div class="criterios">
+          <div class="criterios-box-init-matriz">
+            <a href="http://localhost/criterios/matriz.php">Iniciar Matriz</a>
+          </div>
+
+          <div class="criterios-box">
+            <form method="post" action="" id="formcriterios">
+              <input
+                type="number"
+                name="numero_criterio"
+                placeholder="Número de Criterio..."
+                required
+              />
+              <input
+                type="text"
+                name="nombre"
+                placeholder="Nombre..."
+                required
+              />
+              <input
+                type="number"
+                name="prioridad"
+                placeholder="Prioridad..."
+                required
+              />
+              <button type="button" onclick="sendForm()">Agregar</button>
+              <button type="button" onclick="clearForm()">Limpiar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="./js/registerMatriz.js"></script>
+  </body>
+</html>

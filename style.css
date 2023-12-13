@@ -1,0 +1,335 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.criterios-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 120px;
+}
+
+.criterios-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: rgb(182, 210, 26);
+  width: 500px;
+  border-radius: 6px;
+  box-shadow: 5px 5px 6px 2px rgb(82, 82, 82);
+}
+
+.criterios-container h1 {
+  background-color: rgb(27, 27, 117);
+  width: 100%;
+  text-align: center;
+  color: white;
+  border-radius: 6px;
+  padding: 10px 0px;
+  margin-bottom: 10px;
+}
+
+.criterios {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#formcriterios {
+  display: flex;
+  flex-direction: column;
+}
+
+.criterios-box-init-matriz a {
+  margin-right: 70px;
+  background-color: rgb(27, 27, 117);
+  border: 1px solid gray;
+  border-radius: 10px;
+  font-size: 20px;
+  padding: 10px;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#formcriterios input {
+  margin-bottom: 10px;
+  width: 240px;
+  font-size: 16px;
+  padding: 12px;
+  border: 1px solid gray;
+  border-radius: 6px;
+}
+
+#formcriterios button {
+  font-size: 16px;
+  padding: 12px 0;
+  background-color: rgb(27, 27, 117);
+  color: white;
+  border: 1px solid gray;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+/*********************************************************/
+
+.matriz-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 120px;
+}
+
+.matriz-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: rgb(182, 210, 26);
+  width: 1200px;
+  border-radius: 6px;
+  box-shadow: 5px 5px 6px 2px rgb(82, 82, 82);
+}
+
+.matriz-container h1 {
+  background-color: rgb(27, 27, 117);
+  width: 100%;
+  text-align: center;
+  color: rgb(200, 198, 198);
+  border-radius: 6px;
+  padding: 10px 0px;
+  margin-bottom: 10px;
+}
+
+.matriz-container h2 {
+  background-color: rgb(245, 209, 48);
+  color: white;
+  border: 1px solid gray;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.matriz {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.matriz-box-form-register {
+  flex-direction: column;
+}
+
+.matriz-box-register-matriz a {
+  margin-right: 170px;
+  background-color: rgb(27, 27, 117);
+  border: 1px solid gray;
+  border-radius: 10px;
+  font-size: 20px;
+  padding: 10px;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.selected-matriz {
+  font-size: 16px;
+  padding: 12px;
+  background-color: rgb(27, 27, 117);
+  color: white;
+  border: 1px solid gray;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+.table-container-matriz {
+  margin-top: 5px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: white;
+}
+
+.table-container-matriz th,
+.table-container-matriz td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.table-container-matriz th {
+  background-color: #f2f2f2;
+}
+
+.table-container-matriz tr:hover {
+  background-color: #f5f5f5;
+}
+
+.table-container-matriz button,
+.table-container-matriz input[type="checkbox"] {
+  padding: 6px 10px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.table-container-matriz button {
+  background-color: rgb(27, 27, 117);
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.table-container-matriz button:hover {
+  background-color: rgb(38, 38, 152);
+}
+
+.table-container-matriz .formulario-eliminar {
+  display: inline-block;
+}
+
+.table-container-matriz input[type="checkbox"] {
+  margin-top: 2px;
+}
+
+.formulario-actualizar {
+  margin-bottom: 4px;
+}
+
+.formulario-actualizar input {
+  margin-bottom: 10px;
+  width: 200px;
+  font-size: 13px;
+  padding: 8px;
+  border: 1px solid gray;
+  border-radius: 6px;
+}
+
+.formulario-actualizar button {
+  font-size: 16px;
+  padding: 8px;
+  background-color: rgb(27, 27, 117);
+  color: white;
+  border: 1px solid gray;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+/*********************************************************/
+
+.normalizacion-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 120px;
+}
+
+.normalizacion-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: rgb(182, 210, 26);
+  width: 1000px;
+  border-radius: 6px;
+  box-shadow: 5px 5px 6px 2px rgb(82, 82, 82);
+}
+
+.normalizacion-container h1 {
+  background-color: rgb(27, 27, 117);
+  width: 100%;
+  text-align: center;
+  color: white;
+  border-radius: 6px;
+  padding: 10px 0px;
+  margin-bottom: 10px;
+}
+
+.normalizacion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.normalizacion-container h2 {
+  background-color: rgb(245, 209, 48);
+  color: white;
+  border: 1px solid gray;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.criterios-box-normalizacion-matriz {
+  display: flex;
+  flex-direction: column;
+}
+
+.criterios-box-normalizacion-matriz a {
+  margin-right: 70px;
+  background-color: rgb(27, 27, 117);
+  border: 1px solid gray;
+  border-radius: 10px;
+  font-size: 20px;
+  padding: 10px;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.table-container-normalizacion {
+  margin-top: 5px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: white;
+}
+
+.table-container-normalizacion th,
+.table-container-normalizacion td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.table-container-normalizacion th {
+  background-color: #f2f2f2;
+}
+
+.table-container-normalizacion tr:hover {
+  background-color: #f5f5f5;
+}
+
+.table-container-normalizacion button,
+.table-container-normalizacion input[type="checkbox"] {
+  padding: 6px 10px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.table-container-normalizacion button {
+  background-color: rgb(27, 27, 117);
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.table-container-normalizacion button:hover {
+  background-color: rgb(38, 38, 152);
+}
+
+.table-container-normalizacion .formulario-eliminar {
+  display: inline-block;
+}
+
+.table-container-normalizacion input[type="checkbox"] {
+  margin-top: 2px;
+}
