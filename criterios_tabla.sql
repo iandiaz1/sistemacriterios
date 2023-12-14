@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 13-12-2023 a las 19:55:27
+-- Tiempo de generación: 14-12-2023 a las 04:03:14
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.0.28
 
@@ -32,21 +32,18 @@ CREATE TABLE `criterios_tabla` (
   `numero_criterio` int(11) NOT NULL,
   `nombre` varchar(200) NOT NULL,
   `prioridad` varchar(100) NOT NULL,
-  `sumatoria` int(11) NOT NULL,
-  `ponderacion` int(11) NOT NULL,
-  `porcentaje` int(11) NOT NULL,
-  `prioridad_normalizada` int(11) NOT NULL
+  `sumatoria` float NOT NULL,
+  `ponderacion` float NOT NULL,
+  `prioridad_normalizada` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `criterios_tabla`
 --
 
-INSERT INTO `criterios_tabla` (`id`, `numero_criterio`, `nombre`, `prioridad`, `sumatoria`, `ponderacion`, `porcentaje`, `prioridad_normalizada`) VALUES
-(27, 85, 'arroz', '53', 138, 69, 50, 1),
-(28, 85, 'arroz', '53', 138, 69, 50, 1),
-(29, 99, 'agua', '2', 101, 51, 50, 0),
-(31, 65, 'aguita', '6', 71, 36, 50, 0);
+INSERT INTO `criterios_tabla` (`id`, `numero_criterio`, `nombre`, `prioridad`, `sumatoria`, `ponderacion`, `prioridad_normalizada`) VALUES
+(38, 44, 'agua', '53', 0.666667, 1.25, 0.511628),
+(39, 66, 'arroz', '42', 1, 0.833333, 0.488372);
 
 --
 -- Índices para tablas volcadas
@@ -66,7 +63,7 @@ ALTER TABLE `criterios_tabla`
 -- AUTO_INCREMENT de la tabla `criterios_tabla`
 --
 ALTER TABLE `criterios_tabla`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

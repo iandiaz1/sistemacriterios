@@ -66,6 +66,17 @@ foreach ($criteriosSeleccionados as $index => $id) {
     $ponderacionPorProveedor[$index] = $sumaPorProveedor[$index] / count($infoCriterios);
 }
 
+// Insertar sumatoria, ponderación y prioridad normalizada en la base de datos
+foreach ($infoCriterios as $i => $criterio) {
+    $sumatoria = $criterio['numero_normalizado'][$index];
+    $ponderacion = $ponderacionPorProveedor[$i];
+    $prioridadNormalizada = $criterio['prioridad_normalizada'];
+
+    $nombre = mysqli_real_escape_string($conn, $criterio['nombre']);  
+    $sqlUpdate = "UPDATE criterios_tabla SET sumatoria = $sumatoria, ponderacion = $ponderacion, prioridad_normalizada = $prioridadNormalizada WHERE nombre = '$nombre'";
+    mysqli_query($conn, $sqlUpdate);
+}
+
 mysqli_close($conn);
 ?>
 
