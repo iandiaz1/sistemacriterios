@@ -228,6 +228,7 @@
   justify-content: center;
   align-items: center;
   margin-top: 120px;
+  margin-bottom: 30px;
 }
 
 .normalizacion-container {
@@ -236,7 +237,7 @@
   align-items: center;
   flex-direction: column;
   background-color: rgb(182, 210, 26);
-  width: 1250px;
+  width: 1070px;
   border-radius: 6px;
   box-shadow: 5px 5px 6px 2px rgb(82, 82, 82);
 }
@@ -273,7 +274,7 @@
 }
 
 .criterios-box-normalizacion-matriz a {
-  margin-right: 70px;
+  margin-right: 130px;
   background-color: rgb(27, 27, 117);
   border: 1px solid gray;
   border-radius: 10px;

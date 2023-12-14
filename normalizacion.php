@@ -3,13 +3,18 @@
 require_once 'config.php';
 
 $criteriosSeleccionados = array();
+$infoCriterios = array();
+$sumaNumerosCriterio = array_fill(0, count($criteriosSeleccionados), 0);
+$sumaPrioridades = 0;
+
+$numProveedores = 0;
 
 if (isset($_GET["criterios"])) {
     $criteriosSeleccionados = explode(',', $_GET["criterios"]);
+    $numProveedores = count($criteriosSeleccionados);
 }
 
-$infoCriterios = array();
-
+// Obtener la suma de prioridades para la normalización
 foreach ($criteriosSeleccionados as $id) {
     $sql = "SELECT * FROM criterios_tabla WHERE id='$id'";
     $result = mysqli_query($conn, $sql);
@@ -17,34 +22,48 @@ foreach ($criteriosSeleccionados as $id) {
     if ($result && mysqli_num_rows($result) > 0) {
         $infoCriterio = mysqli_fetch_assoc($result);
 
-        $numeroCriterio = floatval($infoCriterio['numero_criterio']);
         $prioridad = floatval($infoCriterio['prioridad']);
+        $sumaPrioridades += $prioridad;
 
-        $sumatoria = $numeroCriterio + $prioridad;
-
-        $ponderacion = $sumatoria / 2;
-
-        $porcentaje = ($ponderacion / $sumatoria) * 100;
-
-        $prioridad_min = 0;
-        $prioridad_max = 100;
-        $prioridad_normalizada = ($prioridad - $prioridad_min) / ($prioridad_max - $prioridad_min);
-
-        $updateSql = "UPDATE criterios_tabla SET sumatoria = $sumatoria, ponderacion = $ponderacion, porcentaje = $porcentaje, prioridad_normalizada = $prioridad_normalizada WHERE id = '$id'";
-        $updateResult = mysqli_query($conn, $updateSql);
-
-        if (!$updateResult) {
-            echo "Error al actualizar la base de datos: " . mysqli_error($conn);
-            exit;
-        }
-
-        $infoCriterio['sumatoria'] = $sumatoria;
-        $infoCriterio['ponderacion'] = $ponderacion;
-        $infoCriterio['porcentaje'] = $porcentaje;
-        $infoCriterio['prioridad_normalizada'] = $prioridad_normalizada;
-
+        $infoCriterio['prioridad'] = $prioridad;
         $infoCriterios[] = $infoCriterio;
     }
+}
+
+// Obtener la suma de los números de criterio para cada proveedor
+foreach ($criteriosSeleccionados as $index => $id) {
+    $sql = "SELECT * FROM criterios_tabla WHERE id='$id'";
+    $result = mysqli_query($conn, $sql);
+
+    if ($result && mysqli_num_rows($result) > 0) {
+        $infoCriterio = mysqli_fetch_assoc($result);
+        $numeroCriterio = floatval($infoCriterio['numero_criterio']);
+
+        $sumaNumerosCriterio[$index] = $numeroCriterio;
+    }
+}
+
+// Normalizar los datos
+for ($i = 0; $i < count($infoCriterios); $i++) {
+    $infoCriterios[$i]['prioridad_normalizada'] = $infoCriterios[$i]['prioridad'] / $sumaPrioridades;
+
+    foreach ($criteriosSeleccionados as $index => $id) {
+        $infoCriterios[$i]['numero_normalizado'][$index] = $infoCriterios[$i]['numero_criterio'] / $sumaNumerosCriterio[$index];
+    }
+}
+
+// Calcular la suma y ponderación
+$sumaPorProveedor = array_fill(0, $numProveedores, 0);
+$ponderacionPorProveedor = array_fill(0, $numProveedores, 0);
+
+foreach ($infoCriterios as $i => $criterio) {
+    foreach ($criteriosSeleccionados as $index => $id) {
+        $sumaPorProveedor[$index] += $criterio['numero_normalizado'][$index];
+    }
+}
+
+foreach ($criteriosSeleccionados as $index => $id) {
+    $ponderacionPorProveedor[$index] = $sumaPorProveedor[$index] / count($infoCriterios);
 }
 
 mysqli_close($conn);
@@ -70,30 +89,85 @@ mysqli_close($conn);
                 </div>
                 <div class="normalizacion-box">
                     <?php if (!empty($infoCriterios)): ?>
+                        
+                        
+
+                        <!-- Tabla para mostrar la información normalizada de números -->
                         <table class="table-container-normalizacion">
                             <tr>
-                                <th>ID</th>
-                                <th>Número de Criterio</th>
                                 <th>Nombre</th>
-                                <th>Prioridad</th>
-                                <th>Sumatoria</th>
-                                <th>Ponderación</th>
-                                <th>Porcentaje %</th>
+                                <?php foreach ($criteriosSeleccionados as $index => $id): ?>
+                                    <th>Criterio <?php echo $index + 1; ?> </th>
+                                <?php endforeach; ?>
+                            </tr>
+                            <?php foreach ($infoCriterios as $i => $criterio): ?>
+                                <tr>
+                                    <td><?php echo $criterio['nombre']; ?></td>
+                                    <?php foreach ($criteriosSeleccionados as $index => $id): ?>
+                                        <td><?php echo number_format($criterio['numero_normalizado'][$index], 2); ?></td>
+                                    <?php endforeach; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                            <tr>
+                                <td>Suma</td>
+                                <?php foreach ($sumaPorProveedor as $suma): ?>
+                                    <td><?php echo number_format($suma, 2); ?></td>
+                                <?php endforeach; ?>
+                            </tr>
+                            <tr>
+                                <td>Ponderación</td>
+                                <?php foreach ($ponderacionPorProveedor as $ponderacion): ?>
+                                    <td><?php echo number_format($ponderacion, 2); ?></td>
+                                <?php endforeach; ?>
+                            </tr>
+                        </table>
+
+                        <!-- Tabla para mostrar la información normalizada de prioridades -->
+                        <table class="table-container-normalizacion">
+                            <tr>
+                                <th>Nombre</th>
                                 <th>Prioridad Normalizada</th>
                             </tr>
-                            <?php foreach ($infoCriterios as $criterio) : ?>
+                            <?php foreach ($infoCriterios as $i => $criterio): ?>
                                 <tr>
-                                    <td><?php echo $criterio['id']; ?></td>
-                                    <td><?php echo $criterio['numero_criterio']; ?></td>
                                     <td><?php echo $criterio['nombre']; ?></td>
-                                    <td><?php echo $criterio['prioridad']; ?></td>
-                                    <td><?php echo $criterio['sumatoria']; ?></td>
-                                    <td><?php echo $criterio['ponderacion']; ?></td>
-                                    <td><?php echo $criterio['porcentaje']; ?>%</td>
-                                    <td><?php echo $criterio['prioridad_normalizada']; ?></td>
+                                    <td><?php echo number_format($criterio['prioridad_normalizada'], 2); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </table>
+
+                        <!-- Calcular el total por Nombre -->
+                        <?php
+                        $totalPorProveedor = array_fill(0, $numProveedores, 0);
+
+                        foreach ($infoCriterios as $i => $criterio) {
+                            foreach ($criteriosSeleccionados as $index => $id) {
+                                $totalPorProveedor[$index] += $criterio['numero_normalizado'][$index] * $ponderacionPorProveedor[$i];
+                            }
+                        }
+                        ?>
+
+                        <!-- Tabla para mostrar el total por Nombre -->
+                        <table class="table-container-normalizacion">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Total</th>
+                            </tr>
+                            <?php foreach ($totalPorProveedor as $index => $total): ?>
+                                <tr>
+                                    <td><?php echo $infoCriterios[$index]['nombre']; ?></td>
+                                    <td><?php echo number_format($total, 2); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </table>
+
+                        <!-- Encontrar la mejor opción -->
+                        <?php
+                        $mejorOpcionIndex = array_search(max($totalPorProveedor), $totalPorProveedor);
+                        ?>
+
+                        <p style="color: white; background-color: rgb(38, 38, 152); text-align: center; margin-bottom: 5px; border-radius: 5px; padding: 6px; ">Mejor opción: <?php echo $infoCriterios[$mejorOpcionIndex]['nombre']; ?></p>
+                   
                     <?php else: ?>
                         <p>No se ha seleccionado ningún criterio. Regresa a la página anterior y selecciona uno.</p>
                     <?php endif; ?>
