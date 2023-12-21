@@ -23,11 +23,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["eliminar"])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["actualizar"])) {
     $idActualizar = $_POST["id_actualizar"];
-    $nuevoNumeroCriterio = $_POST["nuevo_numero_criterio"];
     $nuevoNombre = $_POST["nuevo_nombre"];
-    $nuevaPrioridad = $_POST["nueva_prioridad"];
+    $nuevoPrecio = $_POST["nuevo_precio"];
+    $nuevaCalidad = $_POST["nueva_calidad"];
+    $nuevaVidaUtil = $_POST["nueva_vidautil"];
 
-    $sqlActualizar = "UPDATE criterios_tabla SET numero_criterio='$nuevoNumeroCriterio', nombre='$nuevoNombre', prioridad='$nuevaPrioridad' WHERE id='$idActualizar'";
+
+    $sqlActualizar = "UPDATE criterios_tabla SET nombre='$nuevoNombre', precio='$nuevoPrecio', calidad='$nuevaCalidad', vida_util='$nuevaVidaUtil'   WHERE id='$idActualizar'";
     $resActualizar = mysqli_query($conn, $sqlActualizar);
 
     if ($resActualizar) {
@@ -82,15 +84,16 @@ $conn->close();
                  
                  <table class="table-container-matriz">
                      <tr>
-                         <th>Número de Criterio</th>
                          <th>Nombre</th>
-                         <th>Prioridad</th>
-                         <th>Acciones</th>
+                         <th>Precio</th>
+                         <th>Calidad</th>
+                         <th>Vida Util</th>
                      </tr>
                      <tr>
-                         <td><?php echo $criterio['numero_criterio']; ?></td>
                          <td><?php echo $criterio['nombre']; ?></td>
-                         <td><?php echo $criterio['prioridad']; ?></td>
+                         <td><?php echo $criterio['precio']; ?></td>
+                         <td><?php echo $criterio['calidad']; ?></td>
+                         <td><?php echo $criterio['vida_util']; ?></td>
                          <td>
                              <button type="button" onclick="mostrarForm('<?php echo $criterio['id']; ?>')">Actualizar</button>
   
@@ -106,9 +109,10 @@ $conn->close();
      
                  <form method="post" action="matriz.php" class="formulario-actualizar" id="form<?php echo $criterio['id']; ?>" style="display: none;">
                      <input type="hidden" name="id_actualizar" value="<?php echo $criterio['id']; ?>">
-                     <input type="text" name="nuevo_numero_criterio" placeholder="Nuevo Número de Criterio...">
                      <input type="text" name="nuevo_nombre" placeholder="Nuevo Nombre...">
-                     <input type="text" name="nueva_prioridad" placeholder="Nueva Prioridad...">
+                     <input type="number" name="nuevo_precio" placeholder="Nuevo Precio...">
+                     <input type="number" name="nueva_calidad" placeholder="Nueva Calidad...">
+                     <input type="number" name="nueva_vidautil" placeholder="Nueva Vida Util...">
                      <button type="submit" name="actualizar">Enviar</button>
                      <button type="button" onclick="ocultarForm('<?php echo $criterio['id']; ?>')">Cerrar</button>
                  </form>

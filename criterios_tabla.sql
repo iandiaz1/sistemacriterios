@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-12-2023 a las 04:03:14
+-- Tiempo de generación: 21-12-2023 a las 04:02:11
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.0.28
 
@@ -29,21 +29,21 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `criterios_tabla` (
   `id` int(11) NOT NULL,
-  `numero_criterio` int(11) NOT NULL,
   `nombre` varchar(200) NOT NULL,
-  `prioridad` varchar(100) NOT NULL,
-  `sumatoria` float NOT NULL,
-  `ponderacion` float NOT NULL,
-  `prioridad_normalizada` float NOT NULL
+  `precio` int(11) NOT NULL,
+  `calidad` int(11) NOT NULL,
+  `vida_util` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `criterios_tabla`
 --
 
-INSERT INTO `criterios_tabla` (`id`, `numero_criterio`, `nombre`, `prioridad`, `sumatoria`, `ponderacion`, `prioridad_normalizada`) VALUES
-(38, 44, 'agua', '53', 0.666667, 1.25, 0.511628),
-(39, 66, 'arroz', '42', 1, 0.833333, 0.488372);
+INSERT INTO `criterios_tabla` (`id`, `nombre`, `precio`, `calidad`, `vida_util`) VALUES
+(58, 'Proveedor 1', 54, 6, 8),
+(59, 'Proveedor 2', 10, 4, 10),
+(60, 'Proveedor 3', 50, 32, 5),
+(63, 'proveedor 4', 42, 10, 8);
 
 --
 -- Índices para tablas volcadas
@@ -63,7 +63,7 @@ ALTER TABLE `criterios_tabla`
 -- AUTO_INCREMENT de la tabla `criterios_tabla`
 --
 ALTER TABLE `criterios_tabla`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

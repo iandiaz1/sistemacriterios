@@ -1,83 +1,92 @@
 <?php
-// Normalizacion.php
+// normalizacion.php
 require_once 'config.php';
 
-$criteriosSeleccionados = array();
-$infoCriterios = array();
-$sumaNumerosCriterio = array_fill(0, count($criteriosSeleccionados), 0);
-$sumaPrioridades = 0;
-
-$numProveedores = 0;
+if ($conn->connect_error) {
+    die("Error de conexión a la base de datos: " . $conn->connect_error);
+}
 
 if (isset($_GET["criterios"])) {
     $criteriosSeleccionados = explode(',', $_GET["criterios"]);
-    $numProveedores = count($criteriosSeleccionados);
-}
+    $numCriterios = count($criteriosSeleccionados);
 
-// Obtener la suma de prioridades para la normalización
-foreach ($criteriosSeleccionados as $id) {
-    $sql = "SELECT * FROM criterios_tabla WHERE id='$id'";
-    $result = mysqli_query($conn, $sql);
+    $datosCriterios = [];
 
-    if ($result && mysqli_num_rows($result) > 0) {
-        $infoCriterio = mysqli_fetch_assoc($result);
+    // Obtener datos de los criterios seleccionados
+    $criteriosIds = implode(',', $criteriosSeleccionados);
+    $sql = "SELECT id, nombre, precio, calidad, vida_util FROM criterios_tabla WHERE id IN ($criteriosIds)";
+    $result = $conn->query($sql);
 
-        $prioridad = floatval($infoCriterio['prioridad']);
-        $sumaPrioridades += $prioridad;
-
-        $infoCriterio['prioridad'] = $prioridad;
-        $infoCriterios[] = $infoCriterio;
+    if (!$result) {
+        die("Error en la consulta: " . mysqli_error($conn));
     }
-}
 
-// Obtener la suma de los números de criterio para cada proveedor
-foreach ($criteriosSeleccionados as $index => $id) {
-    $sql = "SELECT * FROM criterios_tabla WHERE id='$id'";
-    $result = mysqli_query($conn, $sql);
-
-    if ($result && mysqli_num_rows($result) > 0) {
-        $infoCriterio = mysqli_fetch_assoc($result);
-        $numeroCriterio = floatval($infoCriterio['numero_criterio']);
-
-        $sumaNumerosCriterio[$index] = $numeroCriterio;
+    while ($row = $result->fetch_assoc()) {
+        $datosCriterios[] = $row;
     }
-}
 
-// Normalizar los datos
-for ($i = 0; $i < count($infoCriterios); $i++) {
-    $infoCriterios[$i]['prioridad_normalizada'] = $infoCriterios[$i]['prioridad'] / $sumaPrioridades;
+    // Calcular sumatorias
+    $sumatoriaPrecio = 0;
+    $sumatoriaCalidad = 0;
+    $sumatoriaVidaUtil = 0;
 
-    foreach ($criteriosSeleccionados as $index => $id) {
-        $infoCriterios[$i]['numero_normalizado'][$index] = $infoCriterios[$i]['numero_criterio'] / $sumaNumerosCriterio[$index];
+    foreach ($datosCriterios as $proveedor) {
+        $sumatoriaPrecio += $proveedor['precio'];
+        $sumatoriaCalidad += $proveedor['calidad'];
+        $sumatoriaVidaUtil += $proveedor['vida_util'];
     }
-}
 
-// Calcular la suma y ponderación
-$sumaPorProveedor = array_fill(0, $numProveedores, 0);
-$ponderacionPorProveedor = array_fill(0, $numProveedores, 0);
+    // Construir la matriz de comparación de criterios
+    $matrizComparacion = [
+        'precio' => [],
+        'calidad' => [],
+        'vida_util' => [],
+    ];
 
-foreach ($infoCriterios as $i => $criterio) {
-    foreach ($criteriosSeleccionados as $index => $id) {
-        $sumaPorProveedor[$index] += $criterio['numero_normalizado'][$index];
+    foreach ($datosCriterios as $proveedor1) {
+        $matrizComparacion['precio'][$proveedor1['id']] = [];
+        $matrizComparacion['calidad'][$proveedor1['id']] = [];
+        $matrizComparacion['vida_util'][$proveedor1['id']] = [];
+
+        foreach ($datosCriterios as $proveedor2) {
+            $matrizComparacion['precio'][$proveedor1['id']][$proveedor2['id']] = $proveedor1['precio'] / $proveedor2['precio'];
+            $matrizComparacion['calidad'][$proveedor1['id']][$proveedor2['id']] = $proveedor1['calidad'] / $proveedor2['calidad'];
+            $matrizComparacion['vida_util'][$proveedor1['id']][$proveedor2['id']] = $proveedor1['vida_util'] / $proveedor2['vida_util'];
+        }
     }
+
+    $mediasPrecio = [];
+    $mediasCalidad = [];
+    $mediasVidaUtil = [];
+
+    foreach ($datosCriterios as $proveedor) {
+        $mediasPrecio[$proveedor['id']] = $sumatoriaPrecio != 0 ? $sumatoriaPrecio / count($datosCriterios) : 0;
+        $mediasCalidad[$proveedor['id']] = $sumatoriaCalidad != 0 ? $sumatoriaCalidad / count($datosCriterios) : 0;
+        $mediasVidaUtil[$proveedor['id']] = $sumatoriaVidaUtil != 0 ? $sumatoriaVidaUtil / count($datosCriterios) : 0;
+    }
+
+    // Construir la matriz normalizada de comparación de criterios
+    $matrizNormalizada = [
+        'precio' => [],
+        'calidad' => [],
+        'vida_util' => [],
+    ];
+
+    foreach ($datosCriterios as $proveedor1) {
+        foreach ($datosCriterios as $proveedor2) {
+            $matrizNormalizada['precio'][$proveedor1['id']][$proveedor2['id']] =
+                $matrizComparacion['precio'][$proveedor1['id']][$proveedor2['id']] / $mediasPrecio[$proveedor1['id']];
+
+            $matrizNormalizada['calidad'][$proveedor1['id']][$proveedor2['id']] =
+                $matrizComparacion['calidad'][$proveedor1['id']][$proveedor2['id']] / $mediasCalidad[$proveedor1['id']];
+
+            $matrizNormalizada['vida_util'][$proveedor1['id']][$proveedor2['id']] =
+                $matrizComparacion['vida_util'][$proveedor1['id']][$proveedor2['id']] / $mediasVidaUtil[$proveedor1['id']];
+        }
+    }
+
+    $conn->close(); 
 }
-
-foreach ($criteriosSeleccionados as $index => $id) {
-    $ponderacionPorProveedor[$index] = $sumaPorProveedor[$index] / count($infoCriterios);
-}
-
-// Insertar sumatoria, ponderación y prioridad normalizada en la base de datos
-foreach ($infoCriterios as $i => $criterio) {
-    $sumatoria = $criterio['numero_normalizado'][$index];
-    $ponderacion = $ponderacionPorProveedor[$i];
-    $prioridadNormalizada = $criterio['prioridad_normalizada'];
-
-    $nombre = mysqli_real_escape_string($conn, $criterio['nombre']);  
-    $sqlUpdate = "UPDATE criterios_tabla SET sumatoria = $sumatoria, ponderacion = $ponderacion, prioridad_normalizada = $prioridadNormalizada WHERE nombre = '$nombre'";
-    mysqli_query($conn, $sqlUpdate);
-}
-
-mysqli_close($conn);
 ?>
 
 <!DOCTYPE html>
@@ -99,89 +108,319 @@ mysqli_close($conn);
                     <a href="index.html">Registrar Matriz</a>
                 </div>
                 <div class="normalizacion-box">
-                    <?php if (!empty($infoCriterios)): ?>
-                        
-                        
 
-                        <!-- Tabla para mostrar la información normalizada de números -->
-                        <table class="table-container-normalizacion">
+                    <!-- Tabla de Datos -->
+                    <h2>Tabla de Datos</h2>
+                    <table class="table-container-normalizacion">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Calidad</th>
+                            <th>Vida Util</th>
+                        </tr>
+                        <?php foreach ($datosCriterios as $row): ?>
                             <tr>
-                                <th>Nombre</th>
-                                <?php foreach ($criteriosSeleccionados as $index => $id): ?>
-                                    <th>Criterio <?php echo $index + 1; ?> </th>
-                                <?php endforeach; ?>
+                                <td><?= $row['id'] ?></td>
+                                <td><?= $row['nombre'] ?></td>
+                                <td><?= $row['precio'] ?></td>
+                                <td><?= $row['calidad'] ?></td>
+                                <td><?= $row['vida_util'] ?></td>
                             </tr>
-                            <?php foreach ($infoCriterios as $i => $criterio): ?>
-                                <tr>
-                                    <td><?php echo $criterio['nombre']; ?></td>
-                                    <?php foreach ($criteriosSeleccionados as $index => $id): ?>
-                                        <td><?php echo number_format($criterio['numero_normalizado'][$index], 2); ?></td>
-                                    <?php endforeach; ?>
-                                </tr>
+                        <?php endforeach; ?>
+                    </table>
+
+                    <!-- Matriz Criterio Precio -->
+                    <h3>Matriz Criterio Precio</h3>
+                    <table class="table-container-normalizacion">
+                        <tr>
+                            <th></th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <th><?= $proveedor['nombre'] ?></th>
                             <?php endforeach; ?>
+                        </tr>
+                        <?php foreach ($datosCriterios as $proveedor1): ?>
                             <tr>
-                                <td>Suma</td>
-                                <?php foreach ($sumaPorProveedor as $suma): ?>
-                                    <td><?php echo number_format($suma, 2); ?></td>
+                                <th><?= $proveedor1['nombre'] ?></th>
+                                <?php $sumatoriaFilaPrecio = 0; ?>
+                                <?php foreach ($datosCriterios as $proveedor2): ?>
+                                    <?php
+                                    $valorFormateado = number_format($matrizComparacion['precio'][$proveedor1['id']][$proveedor2['id']], 2);
+                                    ?>
+                                    <td><?= $valorFormateado ?></td>
+                                    <?php $sumatoriaFilaPrecio += $matrizComparacion['precio'][$proveedor1['id']][$proveedor2['id']]; ?>
                                 <?php endforeach; ?>
                             </tr>
-                            <tr>
-                                <td>Ponderación</td>
-                                <?php foreach ($ponderacionPorProveedor as $ponderacion): ?>
-                                    <td><?php echo number_format($ponderacion, 2); ?></td>
-                                <?php endforeach; ?>
-                            </tr>
-                        </table>
+                        <?php endforeach; ?>
 
-                        <!-- Tabla para mostrar la información normalizada de prioridades -->
-                        <table class="table-container-normalizacion">
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Prioridad Normalizada</th>
-                            </tr>
-                            <?php foreach ($infoCriterios as $i => $criterio): ?>
-                                <tr>
-                                    <td><?php echo $criterio['nombre']; ?></td>
-                                    <td><?php echo number_format($criterio['prioridad_normalizada'], 2); ?></td>
-                                </tr>
+                        <tr>
+                            <th style="background-color: rgb(27, 27, 117); color: white;">Sumatoria</th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <?php
+                                $sumatoriaColumnaPrecio = 0;
+                                foreach ($datosCriterios as $proveedor2) {
+                                    $sumatoriaColumnaPrecio += $matrizComparacion['precio'][$proveedor2['id']][$proveedor['id']];
+                                }
+                                $sumatoriaFormateada = number_format($sumatoriaColumnaPrecio, 2);
+                                ?>
+                                <td><?= $sumatoriaFormateada ?></td>
                             <?php endforeach; ?>
-                        </table>
+                        </tr>
+                        
+                    </table>
 
-                        <!-- Calcular el total por Nombre -->
-                        <?php
-                        $totalPorProveedor = array_fill(0, $numProveedores, 0);
-
-                        foreach ($infoCriterios as $i => $criterio) {
-                            foreach ($criteriosSeleccionados as $index => $id) {
-                                $totalPorProveedor[$index] += $criterio['numero_normalizado'][$index] * $ponderacionPorProveedor[$i];
-                            }
-                        }
-                        ?>
-
-                        <!-- Tabla para mostrar el total por Nombre -->
-                        <table class="table-container-normalizacion">
+                    <!-- Matriz Criterio Precio Normalizada -->
+                    <h3>Matriz Criterio Precio Normalizada</h3>
+                    <table class="table-container-normalizacion">
+                        <tr>
+                            <th></th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <th><?= $proveedor['nombre'] ?></th>
+                            <?php endforeach; ?>
+                            <th style="background-color: rgb(27, 27, 117); color: white;">Promedio</th>
+                        </tr>
+                        <?php foreach ($datosCriterios as $proveedor1): ?>
                             <tr>
-                                <th>Nombre</th>
+                                <th><?= $proveedor1['nombre'] ?></th>
+                                <?php
+                                $sumatoriaFilaPrecioNormalizada = 0; 
+                                ?>
+                                <?php foreach ($datosCriterios as $proveedor2): ?>
+                                    <?php
+                                    $valorFormateado = number_format($matrizNormalizada['precio'][$proveedor1['id']][$proveedor2['id']], 2);
+                                    $sumatoriaFilaPrecioNormalizada += $matrizNormalizada['precio'][$proveedor1['id']][$proveedor2['id']];
+                                    ?>
+                                    <td><?= $valorFormateado ?></td>
+                                <?php endforeach; ?>
+                                <?php
+                                $promedioFilaPrecioNormalizada = $sumatoriaFilaPrecioNormalizada / count($datosCriterios);
+                                $promedioFormateado = number_format($promedioFilaPrecioNormalizada, 2);
+                                ?>
+                                <td><?= $promedioFormateado ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+
+
+                     <!-- Matriz Criterio Calidad -->
+                    <h3>Matriz Criterio Calidad</h3>
+                    <table class="table-container-normalizacion">
+                        <tr>
+                            <th></th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <th><?= $proveedor['nombre'] ?></th>
+                            <?php endforeach; ?>
+                        </tr>
+                        <?php foreach ($datosCriterios as $proveedor1): ?>
+                            <tr>
+                                <th><?= $proveedor1['nombre'] ?></th>
+                                <?php $sumatoriaFilaCalidad = 0; ?>
+                                <?php foreach ($datosCriterios as $proveedor2): ?>
+                                    <?php
+                                    $valorFormateado = number_format($matrizComparacion['calidad'][$proveedor1['id']][$proveedor2['id']], 2);
+                                    ?>
+                                    <td><?= $valorFormateado ?></td>
+                                    <?php $sumatoriaFilaCalidad += $matrizComparacion['calidad'][$proveedor1['id']][$proveedor2['id']]; ?>
+                                <?php endforeach; ?>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <th style="background-color: rgb(27, 27, 117); color: white;">Sumatoria</th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <?php
+                                $sumatoriaColumnaCalidad = 0;
+                                foreach ($datosCriterios as $proveedor2) {
+                                    $sumatoriaColumnaCalidad += $matrizComparacion['calidad'][$proveedor2['id']][$proveedor['id']];
+                                }
+                                $sumatoriaFormateada = number_format($sumatoriaColumnaCalidad, 2);
+                                ?>
+                                <td><?= $sumatoriaFormateada ?></td>
+                            <?php endforeach; ?>
+                        </tr>
+                    </table>
+
+                    <!-- Matriz Criterio Calidad Normalizada -->
+                    <h3>Matriz Criterio Calidad Normalizada</h3>
+                    <table class="table-container-normalizacion">
+                        <tr>
+                            <th></th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <th><?= $proveedor['nombre'] ?></th>
+                            <?php endforeach; ?>
+                            <th style="background-color: rgb(27, 27, 117); color: white;">Promedio</th> 
+                        </tr>
+                        <?php foreach ($datosCriterios as $proveedor1): ?>
+                            <tr>
+                                <th><?= $proveedor1['nombre'] ?></th>
+                                <?php
+                                $sumatoriaFilaCalidadNormalizada = 0; 
+                                ?>
+                                <?php foreach ($datosCriterios as $proveedor2): ?>
+                                    <?php
+                                    $valorFormateado = number_format($matrizNormalizada['calidad'][$proveedor1['id']][$proveedor2['id']], 2);
+                                    $sumatoriaFilaCalidadNormalizada += $matrizNormalizada['calidad'][$proveedor1['id']][$proveedor2['id']];
+                                    ?>
+                                    <td><?= $valorFormateado ?></td>
+                                <?php endforeach; ?>
+                                <?php
+                                $promedioFilaCalidadNormalizada = $sumatoriaFilaCalidadNormalizada / count($datosCriterios);
+                                $promedioFormateado = number_format($promedioFilaCalidadNormalizada, 2);
+                                ?>
+                                <td><?= $promedioFormateado ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+                    
+                    
+                    <!-- Matriz Criterio Vida Util -->
+                    <h3>Matriz Criterio Vida Util</h3>
+                    <table class="table-container-normalizacion">
+                        <tr>
+                            <th></th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <th><?= $proveedor['nombre'] ?></th>
+                            <?php endforeach; ?>
+                        </tr>
+                        <?php foreach ($datosCriterios as $proveedor1): ?>
+                            <tr>
+                                <th><?= $proveedor1['nombre'] ?></th>
+                                <?php $sumatoriaFilaVidaUtil = 0; ?>
+                                <?php foreach ($datosCriterios as $proveedor2): ?>
+                                    <?php
+                                    $valorFormateado = number_format($matrizComparacion['vida_util'][$proveedor1['id']][$proveedor2['id']], 2);
+                                    ?>
+                                    <td><?= $valorFormateado ?></td>
+                                    <?php $sumatoriaFilaVidaUtil += $matrizComparacion['vida_util'][$proveedor1['id']][$proveedor2['id']]; ?>
+                                <?php endforeach; ?>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <th style="background-color: rgb(27, 27, 117); color: white;">Sumatoria</th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <?php
+                                $sumatoriaColumnaVidaUtil = 0;
+                                foreach ($datosCriterios as $proveedor2) {
+                                    $sumatoriaColumnaVidaUtil += $matrizComparacion['vida_util'][$proveedor2['id']][$proveedor['id']];
+                                }
+                                $sumatoriaFormateada = number_format($sumatoriaColumnaVidaUtil, 2);
+                                ?>
+                                <td><?= $sumatoriaFormateada ?></td>
+                            <?php endforeach; ?>
+                        </tr>
+                    </table>
+
+                    <!-- Matriz Criterio Vida Util Normalizada -->
+                    <h3>Matriz Criterio Vida Util Normalizada</h3>
+                    <table class="table-container-normalizacion">
+                        <tr>
+                            <th></th>
+                            <?php foreach ($datosCriterios as $proveedor): ?>
+                                <th><?= $proveedor['nombre'] ?></th>
+                            <?php endforeach; ?>
+                            <th style="background-color: rgb(27, 27, 117); color: white;">Promedio</th> 
+                        </tr>
+                        <?php foreach ($datosCriterios as $proveedor1): ?>
+                            <tr>
+                                <th><?= $proveedor1['nombre'] ?></th>
+                                <?php
+                                $sumatoriaFilaVidaUtilNormalizada = 0; 
+                                ?>
+                                <?php foreach ($datosCriterios as $proveedor2): ?>
+                                    <?php
+                                    $valorFormateado = number_format($matrizNormalizada['vida_util'][$proveedor1['id']][$proveedor2['id']], 2);
+                                    $sumatoriaFilaVidaUtilNormalizada += $matrizNormalizada['vida_util'][$proveedor1['id']][$proveedor2['id']];
+                                    ?>
+                                    <td><?= $valorFormateado ?></td>
+                                <?php endforeach; ?>
+                                <?php
+                                $promedioFilaVidaUtilNormalizada = $sumatoriaFilaVidaUtilNormalizada / count($datosCriterios);
+                                $promedioFormateado = number_format($promedioFilaVidaUtilNormalizada, 2);
+                                ?>
+                                <td><?= $promedioFormateado ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+
+
+                    <!-- Matriz Final -->
+                    <h3>Matriz Final (Ponderación)</h3>
+                    <table class="table-container-normalizacion">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <?php foreach ($datosCriterios as $proveedor1): ?>
+                                    <th><?= $proveedor1['nombre'] ?></th>
+                                <?php endforeach; ?>
                                 <th>Total</th>
                             </tr>
-                            <?php foreach ($totalPorProveedor as $index => $total): ?>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $columnaSumas = array();
+                            $filaSumas = array();
+                            $mejorProveedor = '';
+                            $maxValor = 0;
+                            ?>
+                            <?php foreach ($datosCriterios as $index => $proveedor1): ?>
                                 <tr>
-                                    <td><?php echo $infoCriterios[$index]['nombre']; ?></td>
-                                    <td><?php echo number_format($total, 2); ?></td>
+                                    <th><?= $proveedor1['nombre'] ?></th>
+                                    <?php
+                                    $filaSuma = 0;
+                                    ?>
+                                    <?php foreach ($datosCriterios as $index2 => $proveedor2): ?>
+                                        <?php
+                                        $valorFormateado = number_format(
+                                            ($matrizNormalizada['precio'][$proveedor1['id']][$proveedor2['id']] +
+                                                $matrizNormalizada['calidad'][$proveedor1['id']][$proveedor2['id']] +
+                                                $matrizNormalizada['vida_util'][$proveedor1['id']][$proveedor2['id']]) / 3,
+                                            2
+                                        );
+                                        ?>
+                                        <td><?= $valorFormateado ?></td>
+                                        <?php
+                                        $filaSuma += $valorFormateado;
+                                        ?>
+                                    <?php endforeach; ?>
+                                    <?php
+                                    $columnaSumas[] = $filaSuma;
+                                    $filaSumas[$index] = $filaSuma;
+                                    ?>
+                                  
+                                    <?php
+                                    $totalFila = 0;
+                                    foreach ($columnaSumas as $index2 => $suma) {
+                                        $totalFila += $suma * $filaSumas[$index2];
+                                    }
+                                    ?>
+                                    <td><?= number_format($totalFila, 2) ?></td>
                                 </tr>
+                                <?php
+                                if ($totalFila > $maxValor) {
+                                    $maxValor = $totalFila;
+                                    $mejorProveedor = $proveedor1['nombre'];
+                                }
+                                ?>
                             <?php endforeach; ?>
-                        </table>
-
-                        <!-- Encontrar la mejor opción -->
+                            <tr>
+                                <th style="background-color: rgb(27, 27, 117); color: white;">Ponderación</th>
+                                <?php
+                                foreach ($columnaSumas as $suma) {
+                                    $sumaFormateada = number_format($suma, 2);
+                                    echo "<td>$sumaFormateada</td>";
+                                }
+                                ?>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Mostrar el proveedor con el puntaje más alto -->
+                    <p style="background-color: rgb(27, 27, 117); color: white; padding: 10px; margin: 10px 0; border-radius: 5px;">
                         <?php
-                        $mejorOpcionIndex = array_search(max($totalPorProveedor), $totalPorProveedor);
+                        $maxValorFormateado = number_format($maxValor, 2);
+                        echo "El mejor proveedor es: $mejorProveedor con un valor de $maxValorFormateado";
                         ?>
-
-                        <p style="color: white; background-color: rgb(38, 38, 152); text-align: center; margin-bottom: 5px; border-radius: 5px; padding: 6px; ">Mejor opción: <?php echo $infoCriterios[$mejorOpcionIndex]['nombre']; ?></p>
-                   
-                    <?php else: ?>
-                        <p>No se ha seleccionado ningún criterio. Regresa a la página anterior y selecciona uno.</p>
-                    <?php endif; ?>
+                    </p>
                 </div>
             </div>
         </div>

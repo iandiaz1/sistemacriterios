@@ -19,12 +19,6 @@
           <div class="criterios-box">
             <form method="post" action="" id="formcriterios">
               <input
-                type="number"
-                name="numero_criterio"
-                placeholder="Número de Criterio..."
-                required
-              />
-              <input
                 type="text"
                 name="nombre"
                 placeholder="Nombre..."
@@ -32,8 +26,20 @@
               />
               <input
                 type="number"
-                name="prioridad"
-                placeholder="Prioridad..."
+                name="precio"
+                placeholder="Precio..."
+                required
+              />
+              <input
+                type="number"
+                name="calidad"
+                placeholder="Calidad..."
+                required
+              />
+              <input
+                type="number"
+                name="vidautil"
+                placeholder="Vida Util..."
                 required
               />
               <button type="button" onclick="sendForm()">Agregar</button>

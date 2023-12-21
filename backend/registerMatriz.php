@@ -10,9 +10,11 @@ $resultado = array("mensaje" => "");
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $numeroCriterio = $_POST["numero_criterio"];
     $nombre = $_POST["nombre"];
-    $prioridad = $_POST["prioridad"];
+    $precio = $_POST["precio"];
+    $calidad = $_POST["calidad"];
+    $vidaUtil = $_POST["vidautil"];
 
-    $sql = "INSERT INTO criterios_tabla (numero_criterio, nombre, prioridad) VALUES ('$numeroCriterio', '$nombre', '$prioridad')";
+    $sql = "INSERT INTO criterios_tabla (nombre, precio, calidad, vida_util) VALUES ('$nombre', '$precio', '$calidad', '$vidaUtil')";
 
     $res = mysqli_query($conn, $sql);
 
